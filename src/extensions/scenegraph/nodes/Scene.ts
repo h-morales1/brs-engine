@@ -141,12 +141,18 @@ export class Scene extends Group {
     handleOnKeyEvent(interpreter: Interpreter, key: BrsString, press: BrsBoolean) {
         if (sgRoot.focused instanceof Node) {
             const path = this.createPath(sgRoot.focused, false);
+            if (press.toBoolean()) {
+                postMessage(`print,[KEY-PATH] key=${key.value} focused=${sgRoot.focused?.constructor?.name} path=[${path.map(n => n.constructor.name + ":" + n.nodeSubtype).join(", ")}]`);
+            }
             for (let node of path) {
                 if (this.handleKeyByNode(interpreter, node, key, press)) {
                     return true;
                 }
             }
         } else {
+            if (press.toBoolean()) {
+                postMessage(`print,[KEY-PATH] key=${key.value} NO focused node, fallback to scene`);
+            }
             return this.handleKeyByNode(interpreter, this, key, press);
         }
         return false;

@@ -29,7 +29,7 @@ import {
     rgbaIntToHex,
 } from "brs-engine";
 import { sgRoot } from "../SGRoot";
-import { Scene, Node, Dialog } from "../nodes";
+import { Scene, Node } from "../nodes";
 import { createSceneByType, initializeNode } from "../factory/NodeFactory";
 import { RoSGScreenEvent } from "../events/RoSGScreenEvent";
 
@@ -223,8 +223,9 @@ export class RoSGScreen extends BrsComponent implements BrsValue, BrsDraw2D {
         }
         const press = BrsBoolean.from(nextKey.mod === 0);
         let handled = false;
-        if (sgRoot.scene.dialog instanceof Dialog && sgRoot.scene.dialog.isVisible()) {
-            handled = sgRoot.scene.dialog.handleKey(key.value, press.toBoolean());
+        const dialog = sgRoot.scene.dialog;
+        if (dialog && dialog.isVisible()) {
+            handled = dialog.handleKey(key.value, press.toBoolean());
         } else {
             handled = sgRoot.scene.handleOnKeyEvent(interpreter, key, press);
         }

@@ -171,8 +171,10 @@ export class Dialog extends Group {
     }
 
     setNodeFocus(focusOn: boolean): boolean {
-        if (focusOn && this.hasButtons && sgRoot.focused && this.lastFocus === undefined) {
-            this.lastFocus = sgRoot.focused;
+        if (focusOn && this.hasButtons && this.lastFocus === undefined) {
+            if (sgRoot.focused) {
+                this.lastFocus = sgRoot.focused;
+            }
             sgRoot.setFocused(this.buttonGroup);
             this.isDirty = true;
         }

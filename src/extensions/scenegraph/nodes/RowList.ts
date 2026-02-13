@@ -321,13 +321,7 @@ export class RowList extends ArrayGrid {
         const itemSize = this.getValueJS("itemSize") as number[];
         const rowItemSize = this.getValueJS("rowItemSize") as number[][];
 
-        // Calculate display row index (relative to currRow, not absolute row index)
-        let displayRowIndex = rowIndex - this.currRow;
-        if (this.wrap && displayRowIndex < 0) {
-            displayRowIndex += this.content.length;
-        }
-
-        return rowItemSize[displayRowIndex]?.[0] ?? itemSize[0];
+        return rowItemSize[Math.min(rowIndex, rowItemSize.length - 1)]?.[0] ?? itemSize[0];
     }
 
     private getRowItemSpacing(rowIndex: number): number[] {
@@ -539,15 +533,16 @@ export class RowList extends ArrayGrid {
         const cols = this.getContentChildren(row);
         const numCols = cols.length;
 
-        // Update row dimensions
-        context.rowItemWidth = context.rowItemSize[displayRowIndex]?.[0] ?? context.rowItemWidth;
-        context.rowItemHeight = context.rowItemSize[displayRowIndex]?.[1] ?? context.rowItemHeight;
+        // Update row dimensions (use content row index per Roku SDK)
+        const sizeIdx = Math.min(rowIndex, context.rowItemSize.length - 1);
+        context.rowItemWidth = context.rowItemSize[sizeIdx]?.[0] ?? context.rowItemWidth;
+        context.rowItemHeight = context.rowItemSize[sizeIdx]?.[1] ?? context.rowItemHeight;
 
         const spacing = this.getRowItemSpacing(rowIndex);
         const rowWidth = numCols * context.rowItemWidth + (numCols - 1) * spacing[0];
 
         context.itemRect.width = context.rowItemWidth;
-        context.itemRect.height = context.rowHeights[displayRowIndex] ?? context.rowItemHeight;
+        context.itemRect.height = context.rowHeights[Math.min(rowIndex, context.rowHeights.length - 1)] ?? context.rowItemHeight;
 
         // Render wrap divider if needed
         if (this.wrap && rowIndex === 0 && displayRowIndex > 0) {
@@ -562,31 +557,31 @@ export class RowList extends ArrayGrid {
         context.showRowLabel = this.getValueJS("showRowLabel")?.[rowIndex] ?? context.showRowLabel;
         if (title.length !== 0 && context.showRowLabel) {
             const divRect = { ...context.itemRect, width: rowWidth };
-            const divHeight = this.renderRowDivider(title, divRect, context.opacity, displayRowIndex, context.draw2D);
+            const divHeight = this.renderRowDivider(title, divRect, context.opacity, rowIndex, context.draw2D);
             context.itemRect.y += divHeight;
         }
 
         // Apply horizontal offset and render items
-        const xOffset = this.getRowXOffset(displayRowIndex);
+        const xOffset = this.getRowXOffset(rowIndex);
         context.itemRect.x = context.rect.x + xOffset;
 
         this.renderRowContent(rowIndex, cols, numCols, context.rowItemWidth, spacing, context.itemRect, context);
 
         // Prepare for next row
         context.itemRect.x = context.rect.x;
-        const rowSpacing = this.calculateRowSpacing(displayRowIndex, context.rowSpacings, context.globalSpacing);
+        const rowSpacing = this.calculateRowSpacing(rowIndex, context.rowSpacings, context.globalSpacing);
         context.itemRect.y += context.itemRect.height + rowSpacing;
 
         return RectRect(this.sceneRect, context.itemRect);
     }
 
-    private getRowXOffset(displayRowIndex: number): number {
+    private getRowXOffset(contentRowIndex: number): number {
         const focusXOffset = this.getValueJS("focusXOffset") as number[];
         if (!focusXOffset || focusXOffset.length === 0) {
             return 0;
         }
 
-        const index = Math.min(displayRowIndex, focusXOffset.length - 1);
+        const index = Math.min(contentRowIndex, focusXOffset.length - 1);
         return focusXOffset[index] ?? 0;
     }
 
@@ -610,8 +605,8 @@ export class RowList extends ArrayGrid {
         this.renderRowItems(rowIndex, cols, itemRect, spacing, rowItemWidth, renderMode, context);
     }
 
-    private calculateRowSpacing(displayRowIndex: number, rowSpacings: number[], globalSpacing: number[]): number {
-        const rowSpacing = rowSpacings[displayRowIndex] ?? globalSpacing[1];
+    private calculateRowSpacing(contentRowIndex: number, rowSpacings: number[], globalSpacing: number[]): number {
+        const rowSpacing = rowSpacings[Math.min(contentRowIndex, rowSpacings.length - 1)] ?? globalSpacing[1];
         const defaultRowSpacing = this.resolution === "FHD" ? 60 : 40;
         return rowSpacing !== undefined && rowSpacing !== 0 ? rowSpacing : defaultRowSpacing;
     }

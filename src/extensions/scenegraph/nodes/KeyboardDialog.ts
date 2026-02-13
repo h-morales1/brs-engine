@@ -78,15 +78,21 @@ export class KeyboardDialog extends Dialog {
     }
 
     setNodeFocus(focusOn: boolean): boolean {
-        if (focusOn && sgRoot.focused && this.lastFocus === undefined) {
-            this.lastFocus = sgRoot.focused;
-            sgRoot.setFocused(this.hasButtons ? this.buttonGroup : this.keyboard);
+        if (focusOn && this.lastFocus === undefined) {
+            if (sgRoot.focused) {
+                this.lastFocus = sgRoot.focused;
+            }
+            const target = this.hasButtons ? this.buttonGroup : this.keyboard;
+            sgRoot.setFocused(target);
+            this.focus = this.hasButtons ? "buttons" : "keyboard";
+            postMessage(`print,[KBD-SNF] FIRST CALL: focus="${this.focus}" target=${target?.constructor?.name}`);
             this.isDirty = true;
         }
         return true;
     }
 
     handleKey(key: string, press: boolean): boolean {
+        postMessage(`print,[KBD-HK] key=${key} press=${press} focus="${this.focus}" hasButtons=${this.hasButtons}`);
         const optionsDialog = this.getValueJS("optionsDialog") as boolean;
         let handled = false;
         if (press && (key === "back" || (key === "options" && optionsDialog))) {
