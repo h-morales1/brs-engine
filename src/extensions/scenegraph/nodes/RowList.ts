@@ -552,14 +552,18 @@ export class RowList extends ArrayGrid {
             context.itemRect.y += divHeight + spacing[1];
         }
 
-        // Render row label if needed
+        // Render row label and counter
         const title = row.getValueJS("title") ?? "";
         context.showRowLabel = this.getValueJS("showRowLabel")?.[rowIndex] ?? context.showRowLabel;
+        let labelHeight = 0;
         if (title.length !== 0 && context.showRowLabel) {
             const divRect = { ...context.itemRect, width: rowWidth };
-            const divHeight = this.renderRowDivider(title, divRect, context.opacity, rowIndex, context.draw2D);
-            context.itemRect.y += divHeight;
+            labelHeight = this.renderRowDivider(title, divRect, context.opacity, rowIndex, context.draw2D);
         }
+        const counterHeight = this.renderRowCounter(
+            rowIndex, context.itemRect, spacing[0], context.opacity, context.draw2D
+        );
+        context.itemRect.y += Math.max(labelHeight, counterHeight);
 
         // Apply horizontal offset and render items
         const xOffset = this.getRowXOffset(rowIndex);
@@ -778,6 +782,50 @@ export class RowList extends ArrayGrid {
 
         // Return height of title plus vertical offset (spacing between title and items)
         return this.titleHeight + (offset[1] ?? 0);
+    }
+
+    private renderRowCounter(
+        rowIndex: number,
+        rect: Rect,
+        itemSpacingX: number,
+        opacity: number,
+        draw2D?: IfDraw2D
+    ): number {
+        const show = this.resolveBoolean(this.getValueJS("showRowCounter"), rowIndex, false);
+        if (!show) {
+            return 0;
+        }
+        const row = this.content[rowIndex];
+        const items = row.getNodeChildren().length;
+        if (items === 0) {
+            return 0;
+        }
+        const showShortRows = (this.getValueJS("showRowCounterForShortRows") as boolean) ?? true;
+        if (!showShortRows) {
+            const itemWidth = rect.width;
+            const totalWidth = items * itemWidth + (items - 1) * itemSpacingX;
+            if (totalWidth <= this.sceneRect.width) {
+                return 0;
+            }
+        }
+        const rightOffset = (this.getValueJS("rowCounterRightOffset") as number) || 0;
+        const font = this.getValue("rowLabelFont") as Font;
+        const drawFont = font.createDrawFont();
+        if (!(drawFont instanceof RoFont)) {
+            return 0;
+        }
+        const color = this.getValueJS("rowLabelColor") as number;
+        const counterText = `${(this.rowFocus[rowIndex] ?? 0) + 1} of ${items}`;
+        const textHeight = drawFont.measureTextHeight();
+        const textRect: Rect = {
+            x: rect.x,
+            y: rect.y,
+            width: this.sceneRect.width - rightOffset,
+            height: textHeight,
+        };
+        this.drawText(counterText, font, color, opacity, textRect, "right", "center", 0, draw2D, "", 0);
+        const offset = this.resolveVector(this.getValueJS("rowLabelOffset"), rowIndex, [0, 0]);
+        return textHeight + (offset[1] ?? 0);
     }
 
     protected refreshContent() {
