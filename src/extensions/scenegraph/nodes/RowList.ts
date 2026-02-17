@@ -662,7 +662,12 @@ export class RowList extends ArrayGrid {
             startCol = this.rowScrollOffset[rowIndex] ?? 0;
         }
 
-        const maxVisibleItems = Math.ceil((this.sceneRect.width + spacing[0]) / (rowItemWidth + spacing[0]));
+        if (renderMode === "scrollMode" && startCol > 0) {
+            startCol -= 1;
+            itemRect.x -= (rowItemWidth + spacing[0]);
+        }
+
+        const maxVisibleItems = Math.ceil((this.sceneRect.width + spacing[0]) / (rowItemWidth + spacing[0])) + 1;
         const endCol = renderMode === "wrapMode" ? numCols : Math.min(startCol + maxVisibleItems, numCols);
 
         for (let c = 0; c < (renderMode === "wrapMode" ? numCols : endCol - startCol); c++) {
