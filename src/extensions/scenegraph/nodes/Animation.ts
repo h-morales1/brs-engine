@@ -313,7 +313,10 @@ export class Animation extends AnimationBase {
         if (!searchRoot) {
             return undefined;
         }
-        const found = this.findNodeById(searchRoot, nodeId);
+        // Search descendants only (ignoreRoot=true) so that the search root itself
+        // is not matched. This prevents the animation from targeting its ancestor
+        // component when the component's id happens to match the target node's id.
+        const found = this.findNodeById(searchRoot, nodeId, true);
         return found instanceof Node ? found : undefined;
     }
 
