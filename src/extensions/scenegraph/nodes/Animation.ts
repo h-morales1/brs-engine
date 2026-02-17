@@ -317,7 +317,19 @@ export class Animation extends AnimationBase {
         // is not matched. This prevents the animation from targeting its ancestor
         // component when the component's id happens to match the target node's id.
         const found = this.findNodeById(searchRoot, nodeId, true);
-        return found instanceof Node ? found : undefined;
+        if (found instanceof Node) {
+            return found;
+        }
+        // Fallback: if nothing was found among descendants, check whether the
+        // search root itself is the intended target. This handles the case where
+        // the animation is a direct child of the node it needs to animate
+        // (e.g. fadeAnimation inside loadingIndicatorGroup targeting
+        // loadingIndicatorGroup.opacity).
+        const rootId = searchRoot.getValue("id");
+        if (rootId?.toString().toLowerCase() === nodeId.toLowerCase()) {
+            return searchRoot;
+        }
+        return undefined;
     }
 
     /**
