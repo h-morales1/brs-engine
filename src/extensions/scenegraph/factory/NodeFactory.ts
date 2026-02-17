@@ -1069,8 +1069,10 @@ function parseArray(value: string, defaultValue?: BrsType): RoArray {
         return fallback;
     }
     try {
+        // Normalize BrightScript-style numeric literals (e.g. 00 → 0, 007 → 7) for valid JSON
+        const normalized = trimmed.replace(/\b0+(\d)/g, "$1");
         // Use JSON.parse to handle nested arrays
-        const parsed = JSON.parse(trimmed);
+        const parsed = JSON.parse(normalized);
         if (!Array.isArray(parsed)) {
             return fallback;
         }
