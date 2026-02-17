@@ -542,7 +542,7 @@ export class RowList extends ArrayGrid {
         const rowWidth = numCols * context.rowItemWidth + (numCols - 1) * spacing[0];
 
         context.itemRect.width = context.rowItemWidth;
-        context.itemRect.height = context.rowHeights[Math.min(rowIndex, context.rowHeights.length - 1)] ?? context.rowItemHeight;
+        context.itemRect.height = context.rowItemHeight;
 
         // Render wrap divider if needed
         if (this.wrap && rowIndex === 0 && displayRowIndex > 0) {
@@ -573,8 +573,9 @@ export class RowList extends ArrayGrid {
 
         // Prepare for next row
         context.itemRect.x = context.rect.x;
+        const rowHeight = context.rowHeights[Math.min(rowIndex, context.rowHeights.length - 1)] ?? context.rowItemHeight;
         const rowSpacing = this.calculateRowSpacing(rowIndex, context.rowSpacings, context.globalSpacing);
-        context.itemRect.y += context.itemRect.height + rowSpacing;
+        context.itemRect.y += rowHeight + rowSpacing;
 
         return RectRect(this.sceneRect, context.itemRect);
     }
