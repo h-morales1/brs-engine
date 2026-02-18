@@ -29,6 +29,7 @@ import { convertHexColor, rotateRect, unionRect } from "../SGUtil";
 import { SGNodeFactory } from "../factory/NodeFactory";
 import { jsValueOf } from "../factory/Serializer";
 
+
 export class Group extends Node {
     readonly defaultFields: FieldModel[] = [
         { name: "visible", type: "boolean", value: "true" },
@@ -659,7 +660,8 @@ export class Group extends Node {
             width: 0,
             height: 0,
         };
-        opacity = opacity * this.getOpacity();
+        const nodeOpacity = this.getOpacity();
+        opacity = opacity * nodeOpacity;
         this.renderChildren(interpreter, drawTrans, rotation, opacity, draw2D);
         this.updateContainerBounds(nodeTrans, drawTrans);
         this.updateParentRects(origin, angle);
