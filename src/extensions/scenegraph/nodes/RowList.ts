@@ -18,6 +18,7 @@ import { brsValueOf, jsValueOf } from "../factory/Serializer";
 import { Font } from "./Font";
 import { Group } from "./Group";
 import { ArrayGrid, FocusStyle } from "./ArrayGrid";
+import { createNodeRunInit } from "../factory/NodeFactory";
 import { FieldKind, FieldModel } from "../SGTypes";
 import { SGNodeType } from ".";
 
@@ -78,6 +79,8 @@ export class RowList extends ArrayGrid {
     protected readonly rowItemComps: Group[][] = [[]];
     protected readonly rowFocus: number[];
     protected readonly rowScrollOffset: number[] = []; // Track scroll offset per row for floating focus
+    protected readonly rowTitleComps: (Group | undefined)[] = [];
+    private rowTitleCompHeight: number = 0;
     private readonly titleHeight: number;
 
     constructor(initializedFields: AAMember[] = [], readonly name: string = SGNodeType.RowList) {
@@ -553,12 +556,17 @@ export class RowList extends ArrayGrid {
         }
 
         // Render row label and counter
-        const title = row.getValueJS("title") ?? "";
         context.showRowLabel = this.getValueJS("showRowLabel")?.[rowIndex] ?? context.showRowLabel;
         let labelHeight = 0;
-        if (title.length !== 0 && context.showRowLabel) {
-            const divRect = { ...context.itemRect, width: rowWidth };
-            labelHeight = this.renderRowDivider(title, divRect, context.opacity, rowIndex, context.draw2D);
+        const rowTitleCompName = this.getValueJS("rowTitleComponentName") as string;
+        if (context.showRowLabel && rowTitleCompName) {
+            labelHeight = this.renderRowTitleComponent(rowIndex, row, context);
+        } else {
+            const title = row.getValueJS("title") ?? "";
+            if (title.length !== 0 && context.showRowLabel) {
+                const divRect = { ...context.itemRect, width: rowWidth };
+                labelHeight = this.renderRowDivider(title, divRect, context.opacity, rowIndex, context.draw2D);
+            }
         }
         const counterHeight = this.renderRowCounter(
             rowIndex, context.itemRect, spacing[0], context.opacity, context.draw2D
@@ -766,6 +774,63 @@ export class RowList extends ArrayGrid {
         }
     }
 
+    private measureRenderedHeight(node: Group): number {
+        const dims = node.getDimensions();
+        if (dims.height > 0) {
+            return dims.height;
+        }
+        let maxBottom = 0;
+        for (const child of node.getNodeChildren()) {
+            if (child instanceof Group) {
+                const trans = (child.getValueJS("translation") as number[]) ?? [0, 0];
+                const childHeight = this.measureRenderedHeight(child);
+                const bottom = (trans[1] || 0) + childHeight;
+                if (bottom > maxBottom) {
+                    maxBottom = bottom;
+                }
+            }
+        }
+        return maxBottom;
+    }
+
+    private renderRowTitleComponent(
+        rowIndex: number,
+        row: ContentNode,
+        context: RowListRenderContext
+    ): number {
+        const compName = this.getValueJS("rowTitleComponentName") as string;
+        if (!compName) return 0;
+
+        // Create/cache the component
+        if (!this.rowTitleComps[rowIndex]) {
+            const comp = createNodeRunInit(compName, context.interpreter);
+            if (comp instanceof Group) {
+                comp.setNodeParent(this);
+                this.rowTitleComps[rowIndex] = comp;
+            }
+        }
+
+        const comp = this.rowTitleComps[rowIndex];
+        if (!comp) return 0;
+
+        // Set content (triggers the component's onContentSet observer)
+        comp.setValue("content", row, true);
+
+        // Apply rowLabelOffset
+        const offset = this.resolveVector(this.getValueJS("rowLabelOffset"), rowIndex, [0, 0]);
+
+        // Render the component
+        const origin = [context.itemRect.x + (offset[0] ?? 0), context.itemRect.y];
+        comp.renderNode(context.interpreter, origin, context.rotation, context.opacity, context.draw2D);
+
+        // Cache measured height after first render
+        if (this.rowTitleCompHeight === 0) {
+            this.rowTitleCompHeight = this.measureRenderedHeight(comp);
+        }
+
+        return this.rowTitleCompHeight + (offset[1] ?? 0);
+    }
+
     protected renderRowDivider(
         title: string,
         itemRect: Rect,
@@ -836,6 +901,8 @@ export class RowList extends ArrayGrid {
 
     protected refreshContent() {
         this.content.length = 0;
+        this.rowTitleComps.length = 0;
+        this.rowTitleCompHeight = 0;
         const content = this.getValue("content");
         if (!(content instanceof ContentNode)) {
             return;
