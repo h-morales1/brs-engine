@@ -1,6 +1,6 @@
-import { FieldModel } from "../SGTypes";
+import { FieldModel, FieldKind } from "../SGTypes";
 import { SGNodeType } from ".";
-import { AAMember, Float, BrsString, BrsBoolean, isBrsString } from "brs-engine";
+import { AAMember, Float, BrsString, BrsBoolean, BrsType, isBrsString, RoArray } from "brs-engine";
 import { Dialog } from "./Dialog";
 import { Keyboard } from "./Keyboard";
 import { sgRoot } from "../SGRoot";
@@ -9,6 +9,7 @@ export class KeyboardDialog extends Dialog {
     readonly defaultFields: FieldModel[] = [
         { name: "text", type: "string", value: "" },
         { name: "keyboard", type: "node" },
+        { name: "textEditBox", type: "node" },
     ];
 
     protected readonly minHeight: number;
@@ -25,6 +26,7 @@ export class KeyboardDialog extends Dialog {
 
         this.keyboard = new Keyboard();
         this.setValueSilent("keyboard", this.keyboard);
+        this.setValueSilent("textEditBox", this.keyboard.textEditBox);
 
         let contentWidth: number;
         let contentX: number;
@@ -75,6 +77,16 @@ export class KeyboardDialog extends Dialog {
         this.linkField(this.keyboard, "text");
         this.icon.setValueSilent("visible", BrsBoolean.False);
         this.focus = "";
+    }
+
+    setValue(index: string, value: BrsType, alwaysNotify?: boolean, kind?: FieldKind) {
+        if (index.toLowerCase() === "message" && value instanceof RoArray) {
+            const elements = value.getElements();
+            const joined = elements.map((e) => (isBrsString(e) ? e.getValue() : e.toString())).join("\n");
+            super.setValue(index, new BrsString(joined), alwaysNotify, kind);
+            return;
+        }
+        super.setValue(index, value, alwaysNotify, kind);
     }
 
     setNodeFocus(focusOn: boolean): boolean {
