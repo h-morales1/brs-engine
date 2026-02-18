@@ -113,7 +113,6 @@ export class ArrayGrid extends Group {
         this.registerDefaultFields(this.defaultFields);
         this.registerInitializedFields(initializedFields);
 
-        this.setValueSilent("content", new ContentNode());
         if (this.resolution === "FHD") {
             this.marginX = 36;
             this.marginY = 6;
