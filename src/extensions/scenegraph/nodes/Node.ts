@@ -974,6 +974,16 @@ export class Node extends RoSGNode implements BrsValue {
             if (!(child instanceof Node)) {
                 continue;
             }
+            // Respect component render tree boundaries: custom components (those with
+            // a componentDef) encapsulate their internal children. Check the component's
+            // own ID but do not recurse into its subtree.
+            if (child.componentDef) {
+                const childId = child.getValue("id");
+                if (childId?.toString().toLowerCase() === id.toLowerCase()) {
+                    return child;
+                }
+                continue;
+            }
             const result = this.findNodeById(child, id, false, visited);
             if (result instanceof Node) {
                 return result;
