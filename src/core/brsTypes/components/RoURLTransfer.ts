@@ -91,6 +91,7 @@ export class RoURLTransfer extends BrsComponent implements BrsValue, BrsHttpAgen
                 this.setUserAndPassword,
                 this.setMinimumTransferRate,
                 this.getFailureReason,
+                this.setConnectionTimeout,
                 this.escape,
                 this.unescape,
                 this.urlEncode,
@@ -610,6 +611,18 @@ export class RoURLTransfer extends BrsComponent implements BrsValue, BrsHttpAgen
         },
         impl: (_: Interpreter) => {
             return new BrsString(this.failureReason);
+        },
+    });
+
+    /** Sets the timeout for the connection in milliseconds. */
+    private readonly setConnectionTimeout = new Callable("setConnectionTimeout", {
+        signature: {
+            args: [new StdlibArgument("timeout", ValueKind.Int32)],
+            returns: ValueKind.Boolean,
+        },
+        impl: (_: Interpreter, timeout: Int32) => {
+            // This method is mocked for compatibility
+            return BrsBoolean.True;
         },
     });
 
