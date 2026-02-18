@@ -37,6 +37,9 @@ export class ChannelStore extends Node {
         { name: "fakeServer", type: "boolean", value: "false" },
         { name: "nonce", type: "string" },
         { name: "deviceAttestationToken", type: "node", alwaysNotify: true },
+        { name: "channelCredData", type: "string" },
+        { name: "channelCred", type: "node", alwaysNotify: true },
+        { name: "storeChannelCredDataStatus", type: "node", alwaysNotify: true },
     ];
 
     private readonly channelStore: RoChannelStore;
@@ -98,6 +101,25 @@ export class ChannelStore extends Node {
                 result.setValueSilent("nonce", this.getValue("nonce"));
                 result.setValueSilent("token", this.channelStore.getAttestationToken());
                 super.setValue("deviceAttestationToken", result);
+                break;
+            }
+            case "getchannelcred": {
+                const result = new ContentNode();
+                result.setValueSilent("status", new Int32(0));
+                result.setValueSilent("channelID", new BrsString("dev"));
+                result.setValueSilent("publisherDeviceID", new BrsString(BrsDevice.deviceInfo.clientId));
+                result.setValueSilent("errorCode", new BrsString(""));
+                result.setValueSilent("json", new BrsString(""));
+                super.setValue("channelCred", result);
+                break;
+            }
+            case "storechannelcreddata": {
+                const result = new ContentNode();
+                result.setValueSilent("status", new Int32(0));
+                result.setValueSilent("response", new BrsString('{"status":"success","error":""}'));
+                result.setValueSilent("error", new BrsString(""));
+                result.setValueSilent("error_detail", new BrsString(""));
+                super.setValue("storeChannelCredDataStatus", result);
                 break;
             }
             default:
