@@ -535,6 +535,7 @@ export class RowList extends ArrayGrid {
         const row = this.content[rowIndex];
         const cols = this.getContentChildren(row);
         const numCols = cols.length;
+        const rowStartY = context.itemRect.y;
 
         // Update row dimensions (use content row index per Roku SDK)
         const sizeIdx = Math.min(rowIndex, context.rowItemSize.length - 1);
@@ -558,9 +559,11 @@ export class RowList extends ArrayGrid {
         // Render row label and counter
         context.showRowLabel = this.getValueJS("showRowLabel")?.[rowIndex] ?? context.showRowLabel;
         let labelHeight = 0;
+        let usedCustomComp = false;
         const rowTitleCompName = this.getValueJS("rowTitleComponentName") as string;
         if (context.showRowLabel && rowTitleCompName) {
             labelHeight = this.renderRowTitleComponent(rowIndex, row, context);
+            usedCustomComp = true;
         } else {
             const title = row.getValueJS("title") ?? "";
             if (title.length !== 0 && context.showRowLabel) {
@@ -571,7 +574,10 @@ export class RowList extends ArrayGrid {
         const counterHeight = this.renderRowCounter(
             rowIndex, context.itemRect, spacing[0], context.opacity, context.draw2D
         );
-        context.itemRect.y += Math.max(labelHeight, counterHeight);
+        const headerHeight = Math.max(labelHeight, counterHeight);
+        // Roku adds default padding between label/counter area and content items
+        const labelPadding = headerHeight > 0 && !usedCustomComp ? (this.resolution === "FHD" ? 40 : 27) : 0;
+        context.itemRect.y += headerHeight + labelPadding;
 
         // Apply horizontal offset and render items
         const xOffset = this.getRowXOffset(rowIndex);
@@ -581,9 +587,17 @@ export class RowList extends ArrayGrid {
 
         // Prepare for next row
         context.itemRect.x = context.rect.x;
-        const rowHeight = context.rowHeights[Math.min(rowIndex, context.rowHeights.length - 1)] ?? context.rowItemHeight;
         const rowSpacing = this.calculateRowSpacing(rowIndex, context.rowSpacings, context.globalSpacing);
-        context.itemRect.y += rowHeight + rowSpacing;
+        const explicitRowHeight = context.rowHeights.length > 0
+            ? context.rowHeights[Math.min(rowIndex, context.rowHeights.length - 1)]
+            : undefined;
+        if (explicitRowHeight !== undefined) {
+            // Explicit rowHeights encompass the entire row (header + items), matching real Roku SDK
+            context.itemRect.y = rowStartY + explicitRowHeight + rowSpacing;
+        } else {
+            // No explicit height: advance by item height from current position (after headers)
+            context.itemRect.y += context.rowItemHeight + rowSpacing;
+        }
 
         return RectRect(this.sceneRect, context.itemRect);
     }
@@ -619,9 +633,11 @@ export class RowList extends ArrayGrid {
     }
 
     private calculateRowSpacing(contentRowIndex: number, rowSpacings: number[], globalSpacing: number[]): number {
-        const rowSpacing = rowSpacings[Math.min(contentRowIndex, rowSpacings.length - 1)] ?? globalSpacing[1];
+        if (rowSpacings.length > 0) {
+            return rowSpacings[Math.min(contentRowIndex, rowSpacings.length - 1)];
+        }
         const defaultRowSpacing = this.resolution === "FHD" ? 60 : 40;
-        return rowSpacing !== undefined && rowSpacing !== 0 ? rowSpacing : defaultRowSpacing;
+        return globalSpacing[1] ?? defaultRowSpacing;
     }
 
     private calculateActualRowIndex(displayRowIndex: number): number {
