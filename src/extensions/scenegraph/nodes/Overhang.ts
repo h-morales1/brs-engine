@@ -75,13 +75,13 @@ export class Overhang extends Group {
             this.setValueSilent("height", new Float(this.height));
             this.backRect = this.addRectangle("color", [0, 0], this.width, this.height);
             this.backPoster = this.addPoster("", [0, 0], this.width, this.height);
-            this.logo = this.addPoster(defaultLogo, [102, 63]);
-            this.leftDivider = this.addPoster(divider, [261, 59], 12, 51);
-            this.title = this.addLabel("titleColor", [297, 58], 0, 50, 45, "bottom");
-            this.optionsIcon = this.addPoster(this.optionsOff, [1421, 67], 30, 30);
-            this.optionsText = this.addLabel("optionsColor", [1460, 64], 0, 40, 33, "center", "right");
-            this.rightDivider = this.addPoster(divider, [1646, 59], 12, 51);
-            this.clockText = this.addLabel("clockColor", [1682, 64], 0, 40, 33, "center");
+            this.logo = this.addPoster(defaultLogo, [102, 103]);
+            this.leftDivider = this.addPoster(divider, [261, 100], 12, 51);
+            this.title = this.addLabel("titleColor", [297, 100], 0, 50, 45, "bottom");
+            this.optionsIcon = this.addPoster(this.optionsOff, [1421, 109], 30, 30);
+            this.optionsText = this.addLabel("optionsColor", [1460, 103], 0, 40, 33, "center", "right");
+            this.rightDivider = this.addPoster(divider, [1646, 100], 12, 51);
+            this.clockText = this.addLabel("clockColor", [1682, 103], 0, 40, 33, "center");
         } else {
             this.width = 1280;
             this.height = 115;
@@ -89,13 +89,13 @@ export class Overhang extends Group {
             this.setValueSilent("height", new Float(this.height));
             this.backRect = this.addRectangle("color", [0, 0], this.width, this.height);
             this.backPoster = this.addPoster("", [0, 0], this.width, this.height);
-            this.logo = this.addPoster(defaultLogo, [68, 42]);
-            this.leftDivider = this.addPoster(divider, [174, 39], 8, 34);
-            this.title = this.addLabel("titleColor", [196, 39], 0, 35, 30, "bottom");
-            this.optionsIcon = this.addPoster(this.optionsOff, [959, 46], 20, 20);
-            this.optionsText = this.addLabel("optionsColor", [985, 44], 0, 27, 22, "center", "right");
-            this.rightDivider = this.addPoster(divider, [1109, 39], 8, 34);
-            this.clockText = this.addLabel("clockColor", [1133, 44], 0, 27, 22, "center");
+            this.logo = this.addPoster(defaultLogo, [68, 67]);
+            this.leftDivider = this.addPoster(divider, [174, 67], 8, 34);
+            this.title = this.addLabel("titleColor", [196, 65], 0, 35, 30, "bottom");
+            this.optionsIcon = this.addPoster(this.optionsOff, [959, 73], 20, 20);
+            this.optionsText = this.addLabel("optionsColor", [985, 69], 0, 27, 22, "center", "right");
+            this.rightDivider = this.addPoster(divider, [1109, 67], 8, 34);
+            this.clockText = this.addLabel("clockColor", [1133, 69], 0, 27, 22, "center");
         }
         this.logo.noScaling = true;
         this.backRect.setValueSilent("visible", BrsBoolean.False);
@@ -187,7 +187,7 @@ export class Overhang extends Group {
         const isFHD = this.resolution === "FHD";
         const isDeviceFHD = BrsDevice.getDisplayMode() === "FHD";
         const leftAlignX = isFHD ? 102 : 68;
-        const topAlignY = isFHD ? 60 : 40;
+        const topAlignY = isFHD ? 100 : 67;
         const logoWidth = this.logo.getValueJS("bitmapWidth") as number;
         const optionsWidth = this.optionsText.rectLocal.width ?? (isFHD ? 168 : 112);
         const showClock = this.getValueJS("showClock") as boolean;

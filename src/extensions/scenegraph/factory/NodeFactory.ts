@@ -784,6 +784,15 @@ function addAliases(fieldName: string, fieldAlias: string, node: Node, typeDef: 
  * @param node Parent node to add children to
  * @param typeDef Component definition or component node containing children specifications
  */
+// Roku SDK accepts both singular and plural forms for certain XML attributes.
+// Map singular forms to the plural field names registered by ArrayGrid/RowList nodes.
+const xmlFieldAliases = new Map<string, string>([
+    ["rowspacing", "rowspacings"],
+    ["columnspacing", "columnspacings"],
+    ["rowheight", "rowheights"],
+    ["columnwidth", "columnwidths"],
+]);
+
 function addChildren(interpreter: Interpreter, node: Node, typeDef: ComponentDefinition | ComponentNode) {
     const children = typeDef.children;
     const appendChild = node.getMethod("appendchild");
@@ -794,7 +803,8 @@ function addChildren(interpreter: Interpreter, node: Node, typeDef: ComponentDef
             newChild.location = interpreter.formatLocation();
             const nodeFields = newChild.getNodeFields();
             for (let [key, value] of Object.entries(child.fields)) {
-                const field = nodeFields.get(key.toLowerCase());
+                const lowerKey = key.toLowerCase();
+                const field = nodeFields.get(lowerKey) ?? nodeFields.get(xmlFieldAliases.get(lowerKey) ?? "");
                 if (field) {
                     newChild.setValue(key, getBrsValueFromFieldType(field.getType(), value));
                 }
